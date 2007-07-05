@@ -10,6 +10,7 @@ WriteMakefile(
 		'Carp'			=> 0,
 		'UNIVERSAL'		=> 0,
 		'Hash::Util'		=> 0,
+		'File::Slurp'		=> 0,
 	},
 );
 

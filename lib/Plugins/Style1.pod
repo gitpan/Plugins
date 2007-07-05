@@ -154,9 +154,13 @@ quotes a hash character will end parsing for that line.
 
 =item Plugin requests
 
-E<lt>prefixE<gt>plugin E<lt>module_nameE<gt> [as E<lt>prefix_overrideE<gt>]
+B<E<lt>prefixE<gt>plugin E<lt>/file/name<gt> [as E<lt>prefix_overrideE<gt>]>
 
- plugin Foobar::Baz  # defaults to prefix "fb_"
+B<E<lt>prefixE<gt>plugin E<lt>module_nameE<gt> [as E<lt>prefix_overrideE<gt>]>
+
+ plugin Foobar::Baz	# defaults to prefix "fb_"
+ plugin /some/file	# defaults to no prefix
+ plugin a_file		# defaults to no prefix
 
  fb_plugin Foobar2::Baz as fb2_
 
@@ -178,6 +182,23 @@ as by member data of the caller to readconfig():
 
 To override the prefix in the config file, add C<as prefix-name>
 the end of a plugin line.
+
+Plugins that are fully-fledged perl modules should be named as such.
+Plugins that are not, (named as files) will be wrapped by L<Plugins>
+into a perl module.  Plugins::Style1 dis-ambiguates between files and
+modules by looking for the string C<::> in module names.
+
+=item Plugin search directory directive
+
+Plugins that are plain filenames that are not absolute
+paths are searched for with their own search path.  The
+The directive to add to that path is C<plugin_directory>. 
+
+ plugin_directory /some/path
+ plugin_directory /another/path
+
+Directory names may not have whitespace in them.  Directories
+that do not exist will be silently ignored.
 
 =item Arguments to new()
 
@@ -312,6 +333,8 @@ Generally plugins that have plugins will need to be calling C<readconfig()>.
 
 =head2 Plugin-defined methods
 
+Plugins should be subclasses of C<Plugins::Style1>.
+
 =over 4
 
 =item config_prefix()
@@ -378,7 +401,7 @@ internet pipe order.  I have good pricing for T1s, T3s, OC3s etc.
 
 =head1 LICENSE
 
-Copyright (C) 2006, David Muir Sharnoff <muir@idiom.com>. 
+Copyright (C) 2006-2007, David Muir Sharnoff <muir@idiom.com>. 
 This module may be used and redistributed on the same terms as Perl
 itself.
  

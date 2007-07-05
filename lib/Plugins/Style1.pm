@@ -13,6 +13,7 @@ our @ISA = qw(Plugins);
 my $prefix_generator = "PREFIX_000000";
 our $debug = 0;
 our %sequence;
+our $VERSION = $Plugins::VERSION;
 
 sub new
 {
@@ -22,6 +23,7 @@ sub new
 	$self->{prefixes_done}		= $context->{prefixes_done} || {};
 	$self->{parse_config_line}	= $args{parse_config_line};
 	$self->{config_prefix}		= $context->{config_prefix};
+	$self->{plugin_directories}	= $context->{plugin_directories} || [ '.' ];
 	lock_keys(%$self) 
 		if $pkg eq __PACKAGE__;
 	return $self;
@@ -61,6 +63,9 @@ sub parseconfig
 		|| ($caller && $caller->can('parse_config_line'))
 		|| sub { die "unknown line in $configfile: '$_' (currently: shortname='$prefix', combined_prefix='$combined_prefix'" };
 
+	my $plugin_directories = $args{plugin_directories} || $self->{plugin_directories};
+	$plugin_directories = [ @$plugin_directories ];
+
 	my %active_prefixes;
 	my %known_prefixes;
 
@@ -89,7 +94,13 @@ sub parseconfig
 					last if /^#/;
 				}
 			}
-			if ($config_prefix) {
+			if ($pkg =~ m{/} || $pkg =~ /^\w+$/) {
+				$pkg = $self->file_plugin($pkg, 
+					search_path	=> $plugin_directories,
+					referenced	=> "(referenced at $configfile line $.)",
+				);
+				$config_prefix ||= '';
+			} elsif ($config_prefix) {
 				$self->pkg_invoke($pkg);
 			} else {
 				$config_prefix = $self->pkg_invoke($pkg, 'config_prefix') || '';
@@ -124,6 +135,8 @@ sub parseconfig
 				}
 			}
 			redo if $redo && $_;
+		} elsif (/^plugin_directory\s+(\S.*)/) {
+			push(@$plugin_directories, grep($_ && -d $_, split(' ', $1)));
 		} elsif ($combined_prefix && /^($combined_prefix)/) {
 			push(@{$active_prefixes{$1}{config_lines}}, {
 				config_prefix	=> $1,
@@ -168,6 +181,16 @@ sub first_defined
 	return undef;
 }
 
+sub file_plugin
+{
+	my $self = shift;
+	my $pkg = $self->SUPER::file_plugin(@_, isa => 'Plugins::Style1::Plugin');
+	unless ($pkg->can('config_prefix')) {
+		no strict 'refs';
+		*{"${pkg}::config_prefix"} = sub { print STDERR "USING CONFIG_PREFIX\n"; ''; };
+	}
+	return $pkg;
+}
 
 package Plugins::Style1::Plugin;
 

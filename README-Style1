@@ -118,9 +118,13 @@ CONFIGURATION FILE FORMAT
         quotes a hash character will end parsing for that line.
 
     Plugin requests
+        <prefix>plugin </file/name<gt [as <prefix_override>]>
+
         <prefix>plugin <module_name> [as <prefix_override>]
 
-         plugin Foobar::Baz  # defaults to prefix "fb_"
+         plugin Foobar::Baz     # defaults to prefix "fb_"
+         plugin /some/file      # defaults to no prefix
+         plugin a_file          # defaults to no prefix
 
          fb_plugin Foobar2::Baz as fb2_
 
@@ -142,6 +146,22 @@ CONFIGURATION FILE FORMAT
 
         To override the prefix in the config file, add "as prefix-name" the
         end of a plugin line.
+
+        Plugins that are fully-fledged perl modules should be named as such.
+        Plugins that are not, (named as files) will be wrapped by Plugins
+        into a perl module. Plugins::Style1 dis-ambiguates between files and
+        modules by looking for the string "::" in module names.
+
+    Plugin search directory directive
+        Plugins that are plain filenames that are not absolute paths are
+        searched for with their own search path. The The directive to add to
+        that path is "plugin_directory".
+
+         plugin_directory /some/path
+         plugin_directory /another/path
+
+        Directory names may not have whitespace in them. Directories that do
+        not exist will be silently ignored.
 
     Arguments to new()
         Any indented lines that follow a plugin request will set what
@@ -270,6 +290,8 @@ EXAMPLE CONFIG FILE (NOT SO SIMPLE)
 
 WRITING PLUGINS
   Plugin-defined methods
+    Plugins should be subclasses of "Plugins::Style1".
+
     config_prefix()
         This method is used to determine the default configuration-line
         prefix for the plugin. Defining this method is manditory.
@@ -325,6 +347,6 @@ THANK THE AUTHOR
     internet pipe order. I have good pricing for T1s, T3s, OC3s etc.
 
 LICENSE
-    Copyright (C) 2006, David Muir Sharnoff <muir@idiom.com>. This module
-    may be used and redistributed on the same terms as Perl itself.
+    Copyright (C) 2006-2007, David Muir Sharnoff <muir@idiom.com>. This
+    module may be used and redistributed on the same terms as Perl itself.
 
